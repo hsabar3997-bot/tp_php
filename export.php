@@ -1,37 +1,69 @@
 <?php
-// Auteur: Hajar - Objectif: exporter CSV vers JSON - Date: 24/10/2026
-$fichier_csv = "data/notes.csv";
-$fichier_json = "data/notes.json";
+/**
+ * Auteur    : hajar sabar
+ * Objectif  : Sérialisation JSON et comparaison avec serialize() (Exercice 5.4)
+ * Date      : 24/10/2026
+ */
 
-$tab = [];
-if (file_exists($fichier_csv)) {
-    $fp = fopen($fichier_csv, "r");
-    while (($ligne = fgetcsv($fp, 1000, ";")) !== FALSE) {
-        if (count($ligne) >= 3) {
-            $nom = $ligne[0];
-            $info = floatval($ligne[1]);
-            $math = floatval($ligne[2]);
-            $moy = ($info + $math) / 2;
-            $tab[] = ["nom" => $nom, "info" => $info, "math" => $math, "moyenne" => $moy];
+require_once 'config.php';
+include_once 'includes/entete_inc.php';
+include_once 'includes/menu_inc.php';
+
+echo "<h2>Exportation et Sérialisation de données</h2>";
+
+$fichierCsv = __DIR__ . '/data/notes.csv';
+$resultats = [];
+
+if (file_exists($fichierCsv) && ($handle = fopen($fichierCsv, "r")) !== false) {
+    while (($data = fgetcsv($handle, 1000, ";")) !== false) {
+        if (count($data) >= 3) {
+            $nom = $data[0];
+            $info = floatval($data[1]);
+            $math = floatval($data[2]);
+            $moyenne = ($info + $math) / 2;
+
+            $resultats[] = [
+                "nom" => $nom,
+                "note_info" => $info,
+                "note_math" => $math,
+                "moyenne" => $moyenne
+            ];
         }
     }
-    fclose($fp);
+    fclose($handle);
+} else {
+    // Jeu de données par défaut si pas de CSV
+    $resultats = [
+        ["nom" => "Mohamed", "note_info" => 16, "note_math" => 14, "moyenne" => 15],
+        ["nom" => "Hind", "note_info" => 13, "note_math" => 15, "moyenne" => 14]
+    ];
 }
 
-// 2. écriture JSON
-file_put_contents($fichier_json, json_encode($tab, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+// 1. Écriture JSON
+$jsonContent = json_encode($resultats, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+$fichierJson = __DIR__ . '/data/notes.json';
+file_put_contents($fichierJson, $jsonContent);
+echo "<p class='succes'>Données exportées dans <code>data/notes.json</code></p>";
 
-// 3. relecture
-$json = file_get_contents($fichier_json);
-$data = json_decode($json, true);
+// 2. Relecture JSON
+$jsonLu = file_get_contents($fichierJson);
+$donneesDecodees = json_decode($jsonLu, true);
 
-echo "<h2>Export terminé : data/notes.json créé</h2>";
-echo "<pre>";
-print_r($data);
+echo "<h3>Données relues depuis JSON (json_decode) :</h3><pre>";
+print_r($donneesDecodees);
 echo "</pre>";
 
-// comparaison serialize vs json_encode
-echo "<h3>Comparaison</h3>";
-echo "json_encode: " . json_encode($tab) . "<br>";
-echo "serialize: " . serialize($tab);
-?>
+// 3. Comparaison avec serialize()
+$chaineSerialisee = serialize($resultats);
+
+echo "<h3>Comparaison des formats :</h3>";
+echo "<strong>Format JSON :</strong><pre>" . htmlspecialchars($jsonContent) . "</pre>";
+echo "<strong>Format serialize() native PHP :</strong><pre>" . htmlspecialchars($chaineSerialisee) . "</pre>";
+
+/*
+ * Question 5.4 : Lequel de ces formats est directement exploitable par une application JavaScript ?
+ * Réponse : Le format JSON (JavaScript Object Notation). Il s'agit d'un standard universel
+ * d'échange de données nativement pris en charge par JavaScript (JSON.parse()).
+ */
+
+include_once 'includes/pied_inc.php';

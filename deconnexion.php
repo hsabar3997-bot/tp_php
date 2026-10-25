@@ -1,10 +1,18 @@
 <?php
-// Auteur: Hajar Sabar
+/**
+ * Auteur    : hajar sabar
+ * Objectif  : Destruction de la session utilisateur et redirection (Exercice 6.1)
+ * Date      : 24/10/2026
+ */
+
 session_start();
+
+// Vider toutes les variables de session
 session_unset();
+
+// Détruire la session
 session_destroy();
-setcookie("dernier_login","",time()-3600,"/");
-setcookie("user","",time()-3600,"/");
-header("Location: login.php"); exit;
-// Session stockée serveur (/tmp), Cookie stocké navigateur. setcookie/header avant tout echo sinon headers already sent
-?>
+
+// Redirection vers login.php
+header("Location: login.php");
+exit();
